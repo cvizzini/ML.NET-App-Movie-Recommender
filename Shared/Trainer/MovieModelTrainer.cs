@@ -23,7 +23,6 @@ namespace Shared.Trainer
             return (trainingDataView, testDataView);
         }
 
-
         public ITransformer BuildAndTrainModel(IDataView trainingDataView)
         {
             IEstimator<ITransformer> estimator = mlContext.Transforms.Conversion.MapValueToKey(outputColumnName: "userIdEncoded", inputColumnName: "userId")
@@ -69,6 +68,40 @@ namespace Shared.Trainer
             else
             {
                 Console.WriteLine("Movie " + testInput.movieId + " is not recommended for user " + testInput.userId);
+            }
+        }
+
+        private record MovieRecommended
+        {
+            public MovieRecommended(int movieId, float score)
+            {
+                MovieId = movieId;
+                Score = score;
+            }
+
+            public int MovieId { get; set; }
+            public float Score { get; set; }
+        }
+
+        public void UseModelForTop10(ITransformer model, int userId)
+        {
+            Console.WriteLine($"=============== Making Top 10 predictions for user: {userId} ===============");
+            var predictionEngine = mlContext.Model.CreatePredictionEngine<MovieRatingModel, MovieRatingPredictionModel>(model);
+            var predictions = new List<MovieRecommended>();
+            for (int i = 0; i <= 6947; i++)
+            {
+                var input = new MovieRatingModel() { userId = userId, movieId = i };
+
+                var movieRatingPrediction = predictionEngine.Predict(input);
+                predictions.Add(new MovieRecommended(i, movieRatingPrediction.Score));
+            }
+
+            var top10 = predictions.OrderByDescending(x => x.Score).Take(10);
+
+            var count = 1;
+            foreach (var predictionModel in top10)
+            {
+                Console.WriteLine($"{count++}. {predictionModel.MovieId} score {predictionModel.Score}");
             }
         }
 

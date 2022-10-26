@@ -12,6 +12,9 @@ var testInput = new MovieRatingModel() { userId = 6, movieId = 10 };
 
 movieModelTrainer.UseModelForSinglePrediction(model, testInput);
 
+movieModelTrainer.UseModelForTop10(model, 6);
+
+
 
 /*
     Example Output:
